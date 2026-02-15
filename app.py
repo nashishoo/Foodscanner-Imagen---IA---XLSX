@@ -301,13 +301,11 @@ def main():
             )
         
         with col_exp2:
-            # Export full Excel
-            excel_buffer = pd.ExcelWriter("temp_export.xlsx", engine="openpyxl")
-            df_full.to_excel(excel_buffer, sheet_name="Productos", index=False)
-            excel_buffer.close()
-            
-            with open("temp_export.xlsx", "rb") as f:
-                excel_data = f.read()
+            # Export full Excel using BytesIO
+            from io import BytesIO
+            excel_buffer = BytesIO()
+            df_full.to_excel(excel_buffer, sheet_name="Productos", index=False, engine="openpyxl")
+            excel_data = excel_buffer.getvalue()
             
             st.download_button(
                 label="📊 Descargar Excel (completo)",
@@ -315,11 +313,25 @@ def main():
                 file_name="foodscan_completo.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-            
-            # Cleanup temp file
-            if os.path.exists("temp_export.xlsx"):
-                os.remove("temp_export.xlsx")
+
+
+def add_footer():
+    """Add footer with credits."""
+    st.markdown("---")
+    st.markdown(
+        """
+        <div style="text-align: center; color: gray; padding: 20px;">
+            <p>Desarrollado por 
+                <a href="https://github.com/nashishoo" target="_blank">Dolan</a> | 
+                <a href="https://www.catapaz.site" target="_blank">Catapaz</a>
+            </p>
+            <p style="font-size: 12px;">© 2026 FoodScanner ERP - Herramienta de código abierto</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 if __name__ == "__main__":
     main()
+    add_footer()
