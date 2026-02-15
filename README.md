@@ -195,6 +195,13 @@ Contributions are welcome! Whether you want to:
 
 ---
 
-> **Made with 💚 by [Catapaz](https://github.com/nashishoo)**
+## 📚 Documentation / Documentación
+
+- [English](README.md)
+- [Español](README.es.md)
+
+---
+
+> **Made with 💚 by [Dolan](https://github.com/nashishoo) | [Catapaz](https://www.catapaz.site)**
 > 
 > *Simplifying inventory management, one photo at a time.*
