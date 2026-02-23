@@ -26,7 +26,7 @@ Designed specifically as a companion to the [Micro-ERP-Minimarket](https://githu
 
 | Web App Interface | Scanning Process | Generated Grid |
 | :---: | :---: | :---: |
-| <img src="https://postimg.cc/87DYv7pY" alt="Web App Interface" width="250"/> | <img src="https://postimg.cc/w1VGQ9MP" alt="Scanning Process" width="250"/> | <img src="https://postimg.cc/NK4zkQLB" alt="Generated Grid" width="250"/> |
+| <img src="https://i.postimg.cc/R4gCJQdJ/api-scan.png" alt="Web App Interface" width="250"/> | <img src="https://i.postimg.cc/y7W1mgpS/scan-default.jpg" alt="Scanning Process" width="250"/> | <img src="https://i.postimg.cc/SmjS621r/scan-work.jpg" alt="Generated Grid" width="250"/> |
 
 ---
 

@@ -18,7 +18,7 @@ Una herramienta complementaria inteligente para [Micro-ERP-Minimarket](https://g
 
 ## 📌 Visión General
 
-**FoodScanner ERP** elimina el tedioso proceso de ingresar el inventario manualmente. Simplemente tomando una foto de un estante de la tienda, esta herramienta usa OCR de vanguardia (Gemini Flash 2.0) y la base de datos de Open Food Facts para generar instantáneamente una grilla de inventario completa y editable, lista para tu sistema ERP.
+**FoodScanner ERP** elimina el tedioso proceso de ingresar el inventario manualmente. Simplemente tomando una foto de un estante de la tienda, esta herramienta usa OCR de vanguardia (Gemini Flash 2.5) y la base de datos de Open Food Facts para generar instantáneamente una grilla de inventario completa y editable, lista para tu sistema ERP.
 
 Diseñado específicamente como un complemento para el ecosistema [Micro-ERP-Minimarket](https://github.com/nashishoo/Micro-ERP-Minimarket), pero lo suficientemente flexible para funcionar con cualquier sistema que acepte importaciones de archivos CSV.
 
@@ -26,7 +26,7 @@ Diseñado específicamente como un complemento para el ecosistema [Micro-ERP-Min
 
 | Interfaz de la Web App | Proceso de Escaneo | Grilla Generada |
 | :---: | :---: | :---: |
-| <img src="https://postimg.cc/87DYv7pY" alt="Interfaz de la Web App" width="250"/> | <img src="https://postimg.cc/w1VGQ9MP" alt="Proceso de Escaneo" width="250"/> | <img src="https://postimg.cc/NK4zkQLB" alt="Grilla Generada" width="250"/> |
+| <img src="https://i.postimg.cc/R4gCJQdJ/api-scan.png" alt="Interfaz de la Web App" width="250"/> | <img src="https://i.postimg.cc/y7W1mgpS/scan-default.jpg" alt="Proceso de Escaneo" width="250"/> | <img src="https://i.postimg.cc/SmjS621r/scan-work.jpg" alt="Grilla Generada" width="250"/> |
 
 ---
 
