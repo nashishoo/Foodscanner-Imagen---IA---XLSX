@@ -54,3 +54,6 @@ output/*.xlsx
 .gemini/
 skills-lock.json
 AGENT.md
+
+# Imágenes locales
+.images/
