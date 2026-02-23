@@ -91,107 +91,90 @@ class DataHandler:
     def add_result(
         self,
         image_name: str,
-        product_name: str,
-        product_data: Optional[dict] = None
+        product_data_ocr: dict,
+        product_data_api: Optional[dict] = None
     ):
         """
         Add a scan result to the collection.
         
         Args:
             image_name: Name of the source image
-            product_name: Extracted product name from OCR
-            product_data: Nutritional data from API (optional)
+            product_data_ocr: Product dictionary extracted from OCR
+            product_data_api: Nutritional data from API (optional)
         """
+        # Get base info from OCR
+        nombre = product_data_ocr.get("nombre", "DESCONOCIDO")
+        
+        # Determine status
+        if nombre == "ERROR":
+            estado = "ERROR_OCR"
+        elif nombre == "NO_DETECTADO":
+            estado = "NO_ENCONTRADO"
+        else:
+            estado = "ENCONTRADO"
+        
+        # Initialize default values
+        codigo_barra = ""
+        detalle = product_data_ocr.get("detalle", "")
+        cantidad = product_data_ocr.get("cantidad", 1)
+        proveedor = product_data_ocr.get("proveedor", "")
+        categoria = product_data_ocr.get("categoria", "")
+        imagen_ref = image_name
+        
+        # Override with API details if available
+        if product_data_api:
+            raw_categories = product_data_api.get("categories", "")
+            raw_brands = product_data_api.get("brands", "")
+            
+            api_categoria = self._extract_category_from_openfood(raw_categories)
+            api_proveedor = self._extract_brand_as_proveedor(raw_brands)
+            api_detalle = self._extract_quantity_from_openfood(product_data_api)
+            
+            if not categoria and api_categoria:
+                categoria = api_categoria
+            if not proveedor and api_proveedor:
+                proveedor = api_proveedor
+            if not detalle and api_detalle:
+                detalle = api_detalle
+                
+            codigo_barra = product_data_api.get("code", "")
+        
+        # Structuring exactly the requested fields
         result = {
-            "imagen": image_name,
-            "producto_detectado": product_name,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "nombre": nombre,
+            "codigoBarras": codigo_barra,
+            "detalle": detalle,
+            "cantidad": cantidad,
+            "imagen": imagen_ref,
+            "precioCompra": None,     # Empty for user to fill
+            "precioVenta": None,      # Empty for user to fill
+            "stock": None,            # Empty for user to fill
+            "stockMinimo": None,      # Empty for user to fill
+            "proveedor": proveedor,
+            "categoria": categoria,
+            "fechaVencimiento": None, # Empty for user to fill
+            "estado": estado          # Internal use for UI summary
         }
         
-        # Add product data if available
-        if product_data:
-            # Get raw data
-            raw_categories = product_data.get("categories", "")
-            raw_brands = product_data.get("brands", "")
-            
-            # Extract ERP-specific fields
-            categoria = self._extract_category_from_openfood(raw_categories)
-            proveedor = self._extract_brand_as_proveedor(raw_brands)
-            detalle = self._extract_quantity_from_openfood(product_data)
-            codigo_barra = product_data.get("code", "")
-            
-            result.update({
-                # ERP Grilla Fields
-                "nombre": product_name,
-                "categoria": categoria,
-                "proveedor": proveedor,
-                "detalle": detalle,
-                "codigo_barra": codigo_barra,
-                # Original fields for reference
-                "codigo": codigo_barra,
-                "marca": raw_brands,
-                "categorias": raw_categories,
-                "nutrition_grade": product_data.get("nutrition_grade", ""),
-                # Energy
-                "energia_kcal_100g": product_data.get("energy_kcal_100g", 0),
-                "energia_kj_100g": product_data.get("energy_kj_100g", 0),
-                # Macros
-                "grasas_100g": product_data.get("fat_100g", 0),
-                "grasas_saturadas_100g": product_data.get("saturated_fat_100g", 0),
-                "carbohidratos_100g": product_data.get("carbohydrates_100g", 0),
-                "azucares_100g": product_data.get("sugars_100g", 0),
-                "fibra_100g": product_data.get("fiber_100g", 0),
-                "proteinas_100g": product_data.get("proteins_100g", 0),
-                "sal_100g": product_data.get("salt_100g", 0),
-                "sodio_100g": product_data.get("sodium_100g", 0),
-                "estado": "ENCONTRADO"
-            })
-        else:
-            # No product data available - leave ERP fields empty
-            result.update({
-                # ERP Grilla Fields
-                "nombre": product_name,
-                "categoria": "",
-                "proveedor": "",
-                "detalle": "",
-                "codigo_barra": "",
-                # Original fields
-                "codigo": "",
-                "marca": "",
-                "categorias": "",
-                "nutrition_grade": "",
-                "energia_kcal_100g": 0,
-                "energia_kj_100g": 0,
-                "grasas_100g": 0,
-                "grasas_saturadas_100g": 0,
-                "carbohidratos_100g": 0,
-                "azucares_100g": 0,
-                "fibra_100g": 0,
-                "proteinas_100g": 0,
-                "sal_100g": 0,
-                "sodio_100g": 0,
-                "estado": "NO_ENCONTRADO" if product_name != "ERROR" else "ERROR_OCR"
-            })
-        
         self.results.append(result)
-        logger.debug("Resultado añadido: %s - %s", image_name, product_name)
+        logger.debug("Resultado añadido: %s - %s", image_name, nombre)
     
     def add_result_with_source(
         self,
         image_name: str,
-        product_name: str,
-        product_data: Optional[dict] = None
+        product_data_ocr: dict,
+        product_data_api: Optional[dict] = None
     ):
         """
         Add a scan result with image source (alias for add_result).
         
         Args:
             image_name: Name of the source image
-            product_name: Extracted product name from OCR
-            product_data: Nutritional data from API (optional)
+            product_data_ocr: Product dictionary from OCR
+            product_data_api: Nutritional data from API (optional)
         """
         # Use the same logic as add_result
-        self.add_result(image_name, product_name, product_data)
+        self.add_result(image_name, product_data_ocr, product_data_api)
     
     def export_to_excel(self, output_path: Path) -> bool:
         """

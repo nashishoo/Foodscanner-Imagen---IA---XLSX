@@ -1,207 +1,144 @@
+<div align="center">
+
 # 🛒 FoodScanner ERP
 
-> **Herramienta para escanear productos de supermercado y generar grillas de inventario para sistemas ERP**
-> 
-> Construido con 💚 por [Catapaz](https://github.com/catapaz)
+**Transforma fotos de estantes en datos de inventario en segundos.**<br>
+Una herramienta complementaria inteligente para [Micro-ERP-Minimarket](https://github.com/nashishoo/Micro-ERP-Minimarket) que extrae automáticamente información de productos desde góndolas de supermercado usando IA.
 
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Open Food Facts](https://img.shields.io/badge/Open_Food_Facts-428F7E?style=for-the-badge&logo=open-food-facts&logoColor=white)](https://world.openfoodfacts.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
+[English](README.md) • [Guía del Agente](AGENT.md) • [Reportar Error](https://github.com/nashishoo/foodscanner-erp/issues)
+
+</div>
+
 ---
 
-## 📌 ¿Qué es FoodScanner ERP?
+## 📌 Visión General
 
-**FoodScanner ERP** es una herramienta de código abierto que te permite escanear productos de supermercado desde imágenes y generar automáticamente una grilla de inventario lista para importar a tu sistema ERP.
+**FoodScanner ERP** elimina el tedioso proceso de ingresar el inventario manualmente. Simplemente tomando una foto de un estante de la tienda, esta herramienta usa OCR de vanguardia (Gemini Flash 2.0) y la base de datos de Open Food Facts para generar instantáneamente una grilla de inventario completa y editable, lista para tu sistema ERP.
 
-En lugar de escribir manualmente la información de productos o escanear facturas XML, simplemente:
-1. Toma una foto de una góndola (estante de tienda) o productos
-2. Súbela a la app
-3. Obtén una grilla completa con detalles del producto
-4. Exporta a CSV/Excel e importa a tu ERP
+Diseñado específicamente como un complemento para el ecosistema [Micro-ERP-Minimarket](https://github.com/nashishoo/Micro-ERP-Minimarket), pero lo suficientemente flexible para funcionar con cualquier sistema que acepte importaciones de archivos CSV.
 
-### 🎯 Casos de Uso
+### 📸 Demostración
 
-- **Inventario de tienda**: Cataloga rápidamente productos desde fotos de estantes
-- **Comparación de precios**: Genera listas de productos para comparación de precios
-- **Distribuidores mayoristas**: Crea catálogos de productos desde imágenes de distribuidores
-- **Investigación de mercado**: Analiza categorías y marcas en estantes
+| Interfaz de la Web App | Proceso de Escaneo | Grilla Generada |
+| :---: | :---: | :---: |
+| <img src="https://postimg.cc/87DYv7pY" alt="Interfaz de la Web App" width="250"/> | <img src="https://postimg.cc/w1VGQ9MP" alt="Proceso de Escaneo" width="250"/> | <img src="https://postimg.cc/NK4zkQLB" alt="Grilla Generada" width="250"/> |
 
 ---
 
 ## ✨ Características
 
-- **📸 OCR de Imágenes**: Extrae nombres de productos de imágenes usando Gemini Flash 2.0
-- **🔍 Open Food Facts**: Enriquece datos de productos con información nutricional
-- **📋 Grilla ERP**: Genera grillas editables con:
-  - **Nombre del Producto**
-  - **Categoría** (bebestible, comida, helado, fiambre, lacteo)
-  - **Proveedor/Marca** (Nestle, Walmart, Soprole, etc.)
-  - **Detalle** (peso/volumen: 500g, 1L)
-  - **Código de Barra** (o vacío si no está disponible)
-- **📥 Exportar**: Descarga como CSV (para ERP) o Excel (datos completos)
-- **🌐 Interfaz Web**: UI de Streamlit fácil de usar
-- **☁️ Deploy Listo**: Fácil despliegue en Streamlit Cloud
+- **📸 OCR potenciado por IA**: Extrae nombres de productos instantáneamente a partir de imágenes usando Gemini Flash 2.0.
+- **🔍 Auto-Enriquecimiento**: Obtiene información nutricional, categorías y códigos de barras a través de Open Food Facts.
+- **📋 Categorización Inteligente**: Agrupa artículos automáticamente en categorías como *bebestible, comida, helado, fiambre, lacteo*.
+- **⚡ Listo para ERP**: Genera grillas editables mapeando detalles como peso/volumen (ej., 500g, 1L) y Marca/Proveedor.
+- **📥 Exportación en un clic**: Descarga como CSV para importación directa al ERP, o en Excel para bases de datos completas.
+- **🌐 Interfaz Web**: Interfaz limpia y amigable para el usuario construida en Streamlit.
+- **☁️ Listo para la Nube**: Despliegue con un botón a Streamlit Cloud.
 
 ---
 
 ## 🚀 Inicio Rápido
 
-### Instalación Local
+Pon a correr FoodScanner ERP localmente en menos de 2 minutos.
+
+### Requisitos Previos
+- Python 3.10+
+- Una [Google Gemini API Key](https://aistudio.google.com/app/apikey) gratuita.
+
+### Instalación
 
 ```bash
-# Clona el repositorio
-git clone https://github.com/TU_USUARIO/foodscanner-erp.git
+# 1. Clona el repositorio
+git clone https://github.com/nashishoo/foodscanner-erp.git
 cd foodscanner-erp
 
-# Crea un entorno virtual (opcional pero recomendado)
+# 2. Crea y activa el entorno virtual
 python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate      # Windows
+# En Windows
+venv\Scripts\activate
+# En macOS/Linux
+source venv/bin/activate
 
-# Instala las dependencias
+# 3. Instala las dependencias
 pip install -r requirements.txt
 
-# Ejecuta la app
+# 4. Configura tu API key
+echo "GEMINI_API_KEY=tu_api_key_aqui" > .env
+
+# 5. Ejecuta la aplicación
 streamlit run app.py
 ```
 
-### Configuración
-
-Crea un archivo `.env` con tu API key de Gemini:
-
-```bash
-GEMINI_API_KEY=tu_api_key_aqui
-```
-
-Obtén tu API key gratuita en: [Google AI Studio](https://aistudio.google.com/app/apikey)
+La app se abrirá instantáneamente en tu navegador en `http://localhost:8501`.
 
 ---
 
-## 🎮 Cómo Usar
+## 🎮 Guía de Uso
 
-### 1. Abre la App
-Ejecuta `streamlit run app.py` y abre la URL local (generalmente `http://localhost:8501`)
-
-### 2. Sube Imágenes
-- Arrastra y suelta imágenes de productos/góndolas
-- Soporta: JPG, JPEG, PNG, WebP, BMP
-
-### 3. Procesa
-- Haz clic en "Procesar Imágenes"
-- La app:
-  - Extraerá nombres de productos vía OCR
-  - Buscará cada producto en Open Food Facts
-  - Mapeará categorías y extraerá detalles
-
-### 4. Revisa y Edita
-- Ver la grilla ERP editable
-- Corrige manualmente entradas incorrectas
-- Selecciona categorías desde dropdown
-
-### 5. Exporta
-- **CSV**: Para importación directa a ERP
-- **Excel**: Datos completos con información nutricional
+1. **Sube Imágenes**: Arrastra y suelta fotos de productos o góndolas (soporta JPG, WebP, PNG).
+2. **Procesa**: Haz clic en "Procesar Imágenes". La IA se encarga de la extracción de texto y la búsqueda de datos automáticamente.
+3. **Revisa y Edita**: Revisa la grilla generada en la interfaz web. Puedes ajustar manualmente cualquier campo, seleccionar categorías del menú desplegable o corregir errores tipográficos.
+4. **Exporta**: 
+   - Elige **CSV** para importar directamente los datos limpios en [Micro-ERP-Minimarket](https://github.com/nashishoo/Micro-ERP-Minimarket) o en tu sistema de preferencia.
+   - Elige **Excel** para mantener un registro local y legible por humanos con datos expandidos.
 
 ---
 
-## ☁️ Desplegar en Streamlit Cloud
+## ☁️ Despliegue
 
-Despliega tu propia instancia gratis:
+Despliega tu propia instancia en Streamlit Cloud de forma gratuita:
 
-### Paso 1: Sube a GitHub
-Sube tu código a un repositorio de GitHub.
-
-### Paso 2: Conecta a Streamlit Cloud
-1. Ve a [share.streamlit.io](https://share.streamlit.io)
-2. Inicia sesión con GitHub
-3. Selecciona tu repositorio
-4. Establece el archivo principal como `app.py`
-
-### Paso 3: Agregar Secrets
-En la configuración de Streamlit Cloud, agrega tu API key:
-
-```
-GEMINI_API_KEY = "tu_api_key_aqui"
-```
-
-### Paso 4: Desplegar
-Tu app estará disponible en `https://tu-nombre-app.streamlit.app`
+1. Empuja (push) tu repositorio local a GitHub.
+2. Visita [share.streamlit.io](https://share.streamlit.io) e inicia sesión.
+3. Selecciona tu repositorio y establece la ruta del archivo principal como `app.py`.
+4. En "Advanced Settings" (Configuraciones Avanzadas), añade tu Clave API de Gemini directamente en la sección **Secrets**:
+   ```toml
+   GEMINI_API_KEY = "tu_api_key_aqui"
+   ```
+5. Haz clic en **Deploy!**
 
 ---
 
 ## 📂 Estructura del Proyecto
 
-```
+```text
 foodscanner-erp/
-├── app.py                 # Interfaz web Streamlit
-├── main.py               # Versión CLI (original)
-├── config.py            # Configuración
-├── requirements.txt     # Dependencias
+├── app.py                 # Punto de entrada de interfaz web Streamlit
+├── main.py                # Versión CLI antigua
+├── config.py              # Configuración centralizada
 ├── modules/
-│   ├── ocr.py          # Procesamiento OCR con Gemini
-│   ├── api_client.py   # Cliente de Open Food Facts
-│   └── data_handler.py # Manejo de datos y Excel
-├── utils/
-│   ├── logger.py
-│   └── progress.py
-└── images/              # Imágenes de entrada (local)
+│   ├── ocr.py             # Lógica de procesamiento OCR con Gemini
+│   ├── api_client.py      # Integración con API Open Food Facts
+│   └── data_handler.py    # Manejo de exportación y estructura de datos
+└── utils/                 # Utilidades compartidas (logs, barras de progreso)
 ```
-
----
-
-## 🛠️ Tecnologías
-
-- **Python 3.10+**
-- **Streamlit** - Framework de UI web
-- **Google Gemini Flash 2.0** - OCR para extracción de texto
-- **Open Food Facts API** - Base de datos de productos
-- **Pandas** - Manejo de datos
-- **OpenPyXL** - Exportación a Excel
-
----
-
-## 📝 Licencia
-
-Este proyecto está licenciado bajo **MIT License** - eres libre de usar, modificar y distribuir.
 
 ---
 
 ## 🤝 Contribuir
 
-¡Las contribuciones son bienvenidas! Ya sea que quieras:
+Las contribuciones son las que hacen que la comunidad de código abierto sea un lugar increíble para aprender, inspirarse y crear. Cualquier contribución que hagas será **enormemente apreciada**.
 
-- 🐛 Reportar errores
-- 💡 Sugerir funciones
-- 🔧 Enviar pull requests
-- 📖 Mejorar documentación
-
-**¡Únete a nosotros para hacer la gestión de inventario más fácil para todos!**
-
----
-
-## ⚠️ Notas
-
-- **API Keys**: Gemini API tiene un plan gratuito. Consulta [Google AI Studio](https://aistudio.google.com/app/apikey) para los límites.
-- **Privacidad**: Las imágenes se procesan en memoria y no se almacenan en servidores.
-- **Precisión de Datos**: Siempre verifica la grilla generada antes de importar a tu ERP. Open Food Facts depende de datos contribuidos por la comunidad.
+1. Haz un Fork del proyecto
+2. Crea tu Rama de Característica (`git checkout -b feature/CaracteristicaIncreible`)
+3. Haz un Commit de tus cambios (`git commit -m 'Agregar alguna CaracteristicaIncreible'`)
+4. Haz un Push a la Rama (`git push origin feature/CaracteristicaIncreible`)
+5. Abre un Pull Request
 
 ---
 
-## 🏷️ Etiquetas
+## 📝 Licencia
 
-`#CodigoAbierto` `#ERP` `#Inventario` `#Streamlit` `#Python` `#Supermercado` `#OCR` `#DatosAlimentarios`
-
----
-
-## 📚 Documentación
-
-- [English](README.md)
-- [Español](README.es.md)
+Distribuido bajo la Licencia MIT. Ver `LICENSE` para más información.
 
 ---
 
-> **Hecho con 💚 por [Dolan](https://github.com/nashishoo) | [Catapaz](https://www.catapaz.site)**
-> 
-> *Simplificando la gestión de inventario, una foto a la vez.*
+<div align="center">
+  <p>Hecho con 💚 por <a href="https://github.com/nashishoo">Dolan</a> | <a href="https://www.catapaz.site">Catapaz</a></p>
+  <p><i>Simplificando la gestión de inventario, una foto a la vez.</i></p>
+</div>

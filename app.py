@@ -61,12 +61,19 @@ def process_images(uploaded_files, demo_mode=False, api_key=None):
     temp_dir = Path(tempfile.mkdtemp())
     
     try:
-        # Save uploaded files to temp directory
+        # Save uploaded files to temp directory and session state
         image_paths = []
+        if 'uploaded_images_dict' not in st.session_state:
+            st.session_state.uploaded_images_dict = {}
+            
         for uploaded_file in uploaded_files:
+            # Save raw bytes to session state for later visualization
+            file_bytes = uploaded_file.getvalue()
+            st.session_state.uploaded_images_dict[uploaded_file.name] = file_bytes
+            
             temp_path = temp_dir / uploaded_file.name
             with open(temp_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
+                f.write(file_bytes)
             image_paths.append(temp_path)
         
         # Initialize OCR processor
@@ -86,33 +93,43 @@ def process_images(uploaded_files, demo_mode=False, api_key=None):
         for idx, image_path in enumerate(image_paths):
             status_text.text(f"Procesando imagen {idx + 1}/{len(image_paths)}: {image_path.name}")
             
-            # OCR - Extract product names
+            # OCR - Extract product names (now returns list of dicts)
             product_list = ocr_processor.process_image(image_path)
             
-            if not product_list or product_list == ["ERROR"]:
+            # Handle empty or error cases
+            if not product_list:
+                continue
+                
+            first_prod_name = product_list[0].get("nombre", "") if isinstance(product_list[0], dict) else str(product_list[0])
+            
+            if first_prod_name == "ERROR" or product_list[0] == "ERROR":
+                err_msg = product_list[0].get("error", "Error desconocido") if isinstance(product_list[0], dict) else "Error procesando imagen"
+                st.error(f"Error procesando {image_path.name}: {err_msg}")
                 data_handler.add_result_with_source(
                     image_path.name, 
-                    "ERROR_OCR", 
+                    {"nombre": "ERROR", "detalle": err_msg}, 
                     None
                 )
                 continue
             
-            if product_list == ["NO_DETECTADO"]:
+            if first_prod_name == "NO_DETECTADO":
                 data_handler.add_result_with_source(
                     image_path.name,
-                    "NO_DETECTADO",
+                    {"nombre": "NO_DETECTADO"},
                     None
                 )
                 continue
             
             # Search each product in Open Food Facts
-            for product_name in product_list:
-                product_data = api_client.search_product(product_name)
-                data_handler.add_result_with_source(
-                    image_path.name,
-                    product_name,
-                    product_data
-                )
+            for product_dict in product_list:
+                product_name = product_dict.get("nombre", "")
+                if product_name:
+                    product_data = api_client.search_product(product_name)
+                    data_handler.add_result_with_source(
+                        image_path.name,
+                        product_dict,
+                        product_data
+                    )
             
             progress_bar.progress((idx + 1) / len(image_paths))
         
@@ -144,50 +161,70 @@ def display_erp_grid(results):
     import pandas as pd
     df = pd.DataFrame(results)
     
-    # ERP Column order for display
-    erp_columns = ["nombre", "categoria", "proveedor", "detalle", "codigo_barra"]
+    # Add 'Seleccionar' column for selection
+    if "Seleccionar" not in df.columns:
+        df.insert(0, "Seleccionar", False)
+        
+    # ERP Column order for display EXACTAMENTE COMO SE SOLICITÓ
+    erp_columns = ["Seleccionar", "nombre", "codigoBarras", "detalle", "cantidad", "imagen", "precioCompra", "precioVenta", "stock", "stockMinimo", "proveedor", "categoria", "fechaVencimiento"]
     
-    # Filter to only ERP columns that exist
-    display_cols = [col for col in erp_columns if col in df.columns]
-    
-    # Add extra columns if they exist
-    extra_cols = ["producto_detectado", "estado", "marca", "imagen"]
-    for col in extra_cols:
-        if col in df.columns and col not in display_cols:
-            display_cols.append(col)
-    
-    # Create editable dataframe for ERP
     st.subheader("📋 Grilla ERP -Editable-")
+    st.markdown("*Marca la casilla 'Seleccionar' para ver la imagen de origen.*")
     
-    # Display with editing capability
-    edited_df = st.data_editor(
-        df[display_cols],
-        num_rows="dynamic",
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "categoria": st.column_config.SelectboxColumn(
-                "Categoría",
-                options=["bebestible", "comida", "helado", "fiambre", "lacteo", ""],
-                required=False
-            ),
-            "proveedor": st.column_config.TextColumn(
-                "Proveedor",
-                help="Ej: Nestle, Evercrisp, Walmart, Soprole"
-            ),
-            "detalle": st.column_config.TextColumn(
-                "Detalle",
-                help="Gramaje o volumen (ej: 500g, 1L)"
-            ),
-            "codigo_barra": st.column_config.TextColumn(
-                "Código de Barra",
-                help="Código de barras del producto"
-            )
-        }
-    )
+    # Create two columns for Split View (Grid 70%, Image 30%)
+    grid_col, img_col = st.columns([7, 3])
     
-    # Store edited data back
-    st.session_state.edited_results = edited_df
+    with grid_col:
+        # Display with editing capability and selection enabled
+        edited_df = st.data_editor(
+            df[erp_columns],
+            num_rows="dynamic",
+            use_container_width=True,
+            hide_index=True,
+            key="erp_grid",
+            column_config={
+                "Seleccionar": st.column_config.CheckboxColumn("Seleccionar", help="Marca para ver la imagen"),
+                "nombre": st.column_config.TextColumn("Nombre"),
+                "codigoBarras": st.column_config.TextColumn("Código de Barras"),
+                "detalle": st.column_config.TextColumn("Detalle (Peso/Vol)"),
+                "cantidad": st.column_config.NumberColumn("Cantidad", min_value=1, step=1, default=1),
+                "imagen": st.column_config.TextColumn("Imagen Origen", disabled=True),
+                "precioCompra": st.column_config.NumberColumn("Precio Compra", format="$%d"),
+                "precioVenta": st.column_config.NumberColumn("Precio Venta", format="$%d"),
+                "stock": st.column_config.NumberColumn("Stock", step=1),
+                "stockMinimo": st.column_config.NumberColumn("Stock Mínimo", step=1),
+                "proveedor": st.column_config.TextColumn("Proveedor/Marca"),
+                "categoria": st.column_config.TextColumn("Categoría"),
+                "fechaVencimiento": st.column_config.DateColumn("Fecha Vencimiento", format="DD/MM/YYYY")
+            }
+        )
+        # Store edited data back
+        st.session_state.edited_results = edited_df
+        
+    with img_col:
+        # Logic to display image on selection
+        st.markdown("### 🖼️ Evidencia Visual")
+        
+        # Get selected rows
+        selected_rows = edited_df[edited_df["Seleccionar"] == True]
+        
+        if not selected_rows.empty:
+            # Get the first selected row
+            first_selected = selected_rows.iloc[0]
+            selected_image_name = first_selected["imagen"]
+            st.info(f"Mostrando: **{selected_image_name}**")
+            
+            # Retrieve from session_state
+            if "uploaded_images_dict" in st.session_state and selected_image_name in st.session_state.uploaded_images_dict:
+                st.image(
+                    st.session_state.uploaded_images_dict[selected_image_name], 
+                    use_container_width=True,
+                    caption=f"Producto referenciado: {first_selected['nombre']}"
+                )
+            else:
+                st.warning("Imagen no encontrada en memoria. Re-sube las fotos.")
+        else:
+            st.info("👈 Marca la casilla 'Seleccionar' en la grilla para verificar su imagen de origen.")
 
 
 def main():
@@ -286,14 +323,18 @@ def main():
             import pandas as pd
             df_full = pd.DataFrame(st.session_state.results)
             
-            # Reorder columns - ERP fields first
-            erp_cols = ["nombre", "categoria", "proveedor", "detalle", "codigo_barra"]
-            other_cols = [c for c in df_full.columns if c not in erp_cols]
-            df_export = df_full[erp_cols + other_cols]
+            # Reorder columns - EXACTAMENTE COMO SE SOLICITÓ
+            erp_cols = ["nombre", "codigoBarras", "detalle", "cantidad", "imagen", "precioCompra", "precioVenta", "stock", "stockMinimo", "proveedor", "categoria", "fechaVencimiento"]
+            # To export edits, use the edited_df that was saved in session_state, OR standard results if not edited
+            
+            df_export = st.session_state.edited_results if "edited_results" in st.session_state else pd.DataFrame(st.session_state.results)[erp_cols]
+            
+            if "Seleccionar" in df_export.columns:
+                df_export = df_export.drop(columns=["Seleccionar"])
             
             csv = df_export.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="📥 Descargar CSV (para ERP)",
+                label="📥 Descargar CSV",
                 data=csv,
                 file_name="foodscan_erp.csv",
                 mime="text/csv",
@@ -304,7 +345,7 @@ def main():
             # Export full Excel using BytesIO
             from io import BytesIO
             excel_buffer = BytesIO()
-            df_full.to_excel(excel_buffer, sheet_name="Productos", index=False, engine="openpyxl")
+            df_export.to_excel(excel_buffer, sheet_name="Productos", index=False, engine="openpyxl")
             excel_data = excel_buffer.getvalue()
             
             st.download_button(

@@ -86,9 +86,15 @@ class OCRProcessor:
             
             # Generate content with Gemini
             if USE_NEW_PACKAGE:
+                from google.genai import types
                 response = self.client.models.generate_content(
                     model=self.model,
-                    contents=[config.OCR_PROMPT, image]
+                    contents=[config.OCR_PROMPT, image],
+                    config=types.GenerateContentConfig(
+                        temperature=config.GEMINI_TEMPERATURE,
+                        max_output_tokens=config.GEMINI_MAX_TOKENS,
+                        response_mime_type="application/json"
+                    )
                 )
             else:
                 response = self.model.generate_content(
@@ -99,27 +105,32 @@ class OCRProcessor:
                     generation_config={
                         "max_output_tokens": config.GEMINI_MAX_TOKENS,
                         "temperature": config.GEMINI_TEMPERATURE,
+                        "response_mime_type": "application/json"
                     }
                 )
             
             # Extract text from response
             text_response = response.text.strip()
             
-            # Handle "NO_DETECTADO" case
-            if text_response.upper() == "NO_DETECTADO":
-                logger.warning("No se detectaron productos en: %s", image_path.name)
-                return ["NO_DETECTADO"]
-            
-            # Parse comma-separated list
-            products = [p.strip() for p in text_response.split(',') if p.strip()]
-            
-            if products:
-                logger.info("Productos detectados: %s", products)
-            else:
-                logger.warning("No se pudieron parsear productos de: %s", image_path.name)
-                return ["NO_DETECTADO"]
-            
-            return products
+            # Parse JSON
+            import json
+            try:
+                products = json.loads(text_response)
+                
+                if not isinstance(products, list):
+                    logger.warning("Gemini no devolvió una lista JSON: %s", text_response)
+                    return [{"nombre": "ERROR", "error": "Formato inválido"}]
+                
+                if not products:
+                    logger.warning("No se detectaron productos en: %s", image_path.name)
+                    return [{"nombre": "NO_DETECTADO"}]
+                
+                logger.info("Productos detectados: %d", len(products))
+                return products
+                
+            except json.JSONDecodeError as e:
+                logger.error("Error parseando JSON de Gemini: %s\nText: %s", str(e), text_response)
+                return [{"nombre": "ERROR", "error": "JSON inválido"}]
             
         except Exception as e:
             logger.error("Error procesando imagen %s: %s", image_path.name, str(e))
