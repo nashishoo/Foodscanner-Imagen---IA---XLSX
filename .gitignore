@@ -46,3 +46,11 @@ Thumbs.db
 # Output
 output/*.xlsx
 !output/.gitkeep
+
+# Agentes IA
+.agent/
+.agents/
+.claude/
+.gemini/
+skills-lock.json
+AGENT.md
